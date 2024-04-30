@@ -7,13 +7,15 @@ const bodyParser = require("body-parser")
 const accountSid = process.env.ACCOUNT_SID;
 const authToken = process.env.AUTH_TOKEN;
 const twilio = require('twilio')(accountSid, authToken);
+const cors = require("cors")
 
 
 const app = express();
-const port =  process.env.PORT || 3000;
+const port =  process.env.PORT || 3001;
 
 // Replace with your PostgreSQL credentials
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors())
 app.use(bodyParser.json())
 const pool = new Pool({
 connectionString:"postgres://traffic_violation_user:Ob0NOkTxYIFdz08gyPxutPHRLAEDPUfA@dpg-co90rvcf7o1s7390rfo0-a.oregon-postgres.render.com/traffic_violation?ssl=true"
@@ -23,7 +25,8 @@ connectionString:"postgres://traffic_violation_user:Ob0NOkTxYIFdz08gyPxutPHRLAED
 // cloudinary.config({ 
 //   cloud_name: 'dvb6lx7rm', 
 //   api_key: '195399976547861', 
-//   api_secret: 'KmQUTyS9XNAV0HCKrLYapZmODoI' 
+//   api_secret: 'KmQ
+//UTyS9XNAV0HCKrLYapZmODoI' 
 // });
 
 pool.connect((err)=>{
@@ -84,8 +87,9 @@ const query = `INSERT INTO owners(vehicle_type,bike_name,plate_number,owner_phot
 // Replace with your PostgreSQL credentials
 
 
-app.post('/get', async (req, res) => {
-const body = await req.body[0]
+app.get('/get', async (req, res) => {
+const body = await req.query
+console.log("query",body)
 const {challan_id} = await body;
 const getQuery = await pool.query(`select * from owners inner join challans on owners.plate_number = challans.plate_number where challan_id = $1;`,[challan_id])
 const rows = await getQuery.rows
