@@ -91,7 +91,7 @@ app.get('/get', async (req, res) => {
 const body = await req.query
 console.log("query",body)
 const {challan_id} = await body;
-const getQuery = await pool.query(`select * from owners inner join challans on owners.plate_number = challans.plate_number where challan_id = $1;`,[challan_id])
+const getQuery = await pool.query(`select * from owners inner join challans on owners.plate_number = challans.plate_number where challans.challan_id = $1;`,[challan_id])
 const rows = await getQuery.rows
 console.log(getQuery)
 res.json({result:rows})
@@ -145,18 +145,23 @@ const query = await pool.query(`insert into  challans (fine_amount,challan_creat
 console.log("violation_response",query)
 const getQuery = await pool.query('select challan_id from challans where plate_number = $1',[body.plate_number])
 const {challan_id} = getQuery.rows[0]
+
 res.json({message:"violation added successfully"})
 try{
-
-
+const rows = await pool.query(`select * from owners where plate_number = $1`,[plate_number])
+const query = rows.rows[0] 
+console.log(query)
     twilio.messages.create({
-        body: `hello praveen, you violated ${body.violations} in vehicle having ${body.plate_number} \n we have charged you rupees ${body.fine_amount} \n here is an challan id https://relaxed-salamander-d2266d.netlify.app/${challan_id} go to this website link to pay it `,
+        body: `Hello you have violated the following Traffic Rules: ${body.violations[0]} 
+Plate No: ${body.plate_number} 
+Challan Id: ${challan_id}  
+Follow the link for payment https://relaxed-salamander-d2266d.netlify.app`,
         from: 'whatsapp:+14155238886',
-        to: 'whatsapp:+919345699817'
+        to: `whatsapp:${query.phone_no}`
     })
     .then(message => console.log(message.sid))
   }catch(err){
-    console.log("violation added successfully but not message sent")
+    console.log("violation added successfully but not message sent",err)
     
   }
 }catch(err){
